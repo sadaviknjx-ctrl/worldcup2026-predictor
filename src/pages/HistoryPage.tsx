@@ -29,13 +29,6 @@ const WC_EDITION: Record<number, string> = {
   1998: '1998 法国世界杯',
 }
 
-function WcEditionBadge({ year }: { year: number }) {
-  return (
-    <span className="rounded px-1.5 py-0.5 text-[10px] font-semibold bg-wc-blue/15 text-wc-blue border border-wc-blue/20">
-      {year} WC
-    </span>
-  )
-}
 
 function TierMatchList({ tier }: { tier: Tier | Tier[] }) {
   const { matches, loading, error } = useMatches({ tier, status: 'finished', limit: 500 })

@@ -15,7 +15,7 @@ const CONFIDENCE_LABEL: Record<MatchProbability['confidence'], string> = {
   high:   '含本届数据',
 }
 
-export function WinProbBar({ prob, homeName, awayName, className }: Props) {
+export function WinProbBar({ prob, className }: Props) {
   const { homeWinPct, drawPct, awayWinPct, confidence } = prob
 
   return (
