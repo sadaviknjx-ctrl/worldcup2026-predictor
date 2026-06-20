@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { Trophy, RefreshCw, ChevronDown, ChevronRight } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -9,6 +9,7 @@ import { useMatches } from '@/hooks/useMatches'
 import { usePredictions } from '@/hooks/usePredictions'
 import { usePredictionEngine } from '@/hooks/usePredictionEngine'
 import { useMatchOdds } from '@/hooks/useMatchOdds'
+import { supabase } from '@/lib/supabase'
 import { type Match } from '@/types'
 
 const STATS = [
@@ -73,6 +74,28 @@ export function HomePage() {
 
   const { byMatchId, upsertPrediction, stats } = usePredictions()
   const { predict, finishedWC2026Count, weights } = usePredictionEngine()
+
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState<string | null>(null)
+
+  const handleSync = useCallback(async () => {
+    setSyncing(true)
+    setSyncMsg(null)
+    try {
+      const [resultsRes, oddsRes] = await Promise.all([
+        supabase.functions.invoke('sync-results'),
+        supabase.functions.invoke('sync-odds'),
+      ])
+      const updated = resultsRes.data?.updated ?? 0
+      const synced  = oddsRes.data?.synced ?? 0
+      setSyncMsg(`✅ 更新 ${updated} 场结果，同步 ${synced} 场赔率`)
+      if (updated > 0) { refetch(); refetch2() }
+    } catch {
+      setSyncMsg('❌ 同步失败，请稍后重试')
+    } finally {
+      setSyncing(false)
+    }
+  }, [refetch, refetch2])
 
   // Bulk-fetch odds for all tier-1 upcoming matches
   const upcomingIds = useMemo(
@@ -143,15 +166,20 @@ export function HomePage() {
             </p>
           </div>
         </div>
-        <Button
-          variant="outline" size="sm"
-          onClick={() => { refetch(); refetch2() }}
-          disabled={loading}
-          className="gap-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          刷新数据
-        </Button>
+        <div className="flex flex-col items-end gap-1">
+          <Button
+            variant="outline" size="sm"
+            onClick={handleSync}
+            disabled={syncing || loading}
+            className="gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+            {syncing ? '同步中…' : '同步最新数据'}
+          </Button>
+          {syncMsg && (
+            <span className="text-xs text-muted-foreground">{syncMsg}</span>
+          )}
+        </div>
       </div>
 
       {/* Stats row */}
