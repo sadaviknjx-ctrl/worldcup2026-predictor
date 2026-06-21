@@ -89,7 +89,9 @@ export function HomePage() {
       const updated = resultsRes.data?.updated ?? 0
       const synced  = oddsRes.data?.synced ?? 0
       setSyncMsg(`✅ 更新 ${updated} 场结果，同步 ${synced} 场赔率`)
-      if (updated > 0) { refetch(); refetch2() }
+      refetch()
+      refetch2()
+      refetchOdds()
     } catch {
       setSyncMsg('❌ 同步失败，请稍后重试')
     } finally {
@@ -102,7 +104,7 @@ export function HomePage() {
     () => tier1Matches.filter(m => m.status === 'upcoming').map(m => m.id),
     [tier1Matches]
   )
-  const { odds: oddsMap } = useMatchOdds(upcomingIds)
+  const { odds: oddsMap, refetchOdds } = useMatchOdds(upcomingIds)
 
   // 按轮次分组
   const sections: RoundSection[] = useMemo(() => {

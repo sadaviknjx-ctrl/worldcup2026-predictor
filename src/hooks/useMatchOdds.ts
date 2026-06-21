@@ -13,6 +13,7 @@ export interface MatchOdds {
 export function useMatchOdds(matchIds: number[]) {
   const [odds, setOdds] = useState<Record<number, MatchOdds>>({})
   const [loading, setLoading] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     if (matchIds.length === 0) return
@@ -27,7 +28,7 @@ export function useMatchOdds(matchIds: number[]) {
         setOdds(map)
         setLoading(false)
       })
-  }, [matchIds.join(',')])
+  }, [matchIds.join(','), refreshKey])
 
-  return { odds, loading }
+  return { odds, loading, refetchOdds: () => setRefreshKey(k => k + 1) }
 }
